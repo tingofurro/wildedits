@@ -1,0 +1,4 @@
+*.pyc
+data/users.jsonl
+logs/
+documents/
