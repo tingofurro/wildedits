@@ -364,31 +364,3 @@ class DiffScorer:
         for text1, text2 in zip(texts1, texts2):
             scores.append(self.score_one(text1, text2))
         return {"scores": scores}
-
-
-if __name__ == "__main__":
-    source ="""Subject: Plan your next vacation.
-
-Hey [Customer's Name],
-
-How have you been? Are you tired and wanna go on a vacation? I have special invitation to [City Destination], here are the details.
-
-Experience vibrant cultur and explore the stunning landscapes that [City Destination 2] has the to offer.
-
-Dont miss out on this fantastc opportunity! Reach out to us now to book your escape. Your dream vacation awaits!
-
-Cheers,
-InkSync Agency"""
-    target = """Subject: Plan your next vacation.
-
-Hey Beck,
-
-Are you tired and want go on a vacation? I have special invitation to paris, here are the details.
-
-Experience vibrant culture and explore the stunning landscapes that paris has the to offer.
-
-Don't miss out on this fantastic opportunity! Reach out to us now to book your escape. Your dream vacation awaits!
-
-Cheers,
-InkSync Agency"""
-    print(make_colored_text(source, target))

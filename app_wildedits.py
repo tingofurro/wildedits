@@ -1,7 +1,7 @@
-# To launch: `gunicorn --timeout 60 --bind unix:/export/home/inksync/app.sock -m 777 -w 5 wsgiis:app --reload`
+# To launch: `gunicorn --timeout 60 --bind unix:/home/plaban/wildedits/app.sock -m 777 -w 5 wsgiwe:app --reload`
 from app_params import model_card, NO_LEFT_MENU, ENABLE_CHAT, ENABLE_MARKERS, ENABLE_LOCAL, ENABLE_WARN_VERIFY_AUDIT
 from flask import Flask, request, render_template, send_from_directory, redirect
-from utils_inksync import create_starter_document, get_user_documents
+from utils_wildedits import create_starter_document, get_user_documents
 from model_recommender import RecommendationEngine
 from utils_trace import run_suggestion_tracing
 import utils_misc, json, os, time, pytz
@@ -23,7 +23,7 @@ engine = RecommendationEngine(model_card=model_card)
 
 @app.before_request
 def set_user_id():
-    user_id = request.cookies.get('inksync_uid')
+    user_id = request.cookies.get('wildedits_uid')
     if user_id is not None and not user_id.startswith("UU"):
         user_id = None
     request.start_ts = time.time()
@@ -46,7 +46,7 @@ def set_user_id():
 def set_cookie(response):
     # Add entry to API log
     if not request.skip_log:
-        response.set_cookie('inksync_uid', request.user_id, max_age=60 * 60 * 24 * 90)
+        response.set_cookie('wildedits_uid', request.user_id, max_age=60 * 60 * 24 * 90)
         entry = {"timestamp": datetime.now().isoformat(), "user_id": request.user_id, "endpoint": request.path, "duration": time.time() - request.start_ts, "doc_id": request.doc_id}
         print("[%s] [User %s] %s" % (datetime.now(tz=pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S"), request.user_id, request.path))
         with open(API_LOG_FILE, "a") as f:
@@ -77,7 +77,7 @@ def app_new_doc():
 
 
 @app.route("/")
-def app_inksync_homepage():
+def app_wildedits_homepage():
     documents = get_user_documents(request.user_id)
     no_menu_class = "no_menu" if (request.args.get("no_menu", "false") != "false" or NO_LEFT_MENU) else ""
     return render_template("main.html", documents=documents, active_doc={}, homepage=True, no_menu_class=no_menu_class, hidden_systems_class="")
@@ -85,7 +85,7 @@ def app_inksync_homepage():
 
 @app.route("/doc/<doc_id>")
 @app.route("/doc/<doc_id>/review")
-def app_inksync_docpage(doc_id=None):
+def app_wildedits_docpage(doc_id=None):
     no_menu_class = "no_menu" if (request.args.get("no_menu", "false") != "false" or NO_LEFT_MENU) else ""
 
     documents = get_user_documents(request.user_id)
