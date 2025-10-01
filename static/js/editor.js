@@ -21,6 +21,7 @@ function get_current_text() {
     $(tempElement).find(".no_show").remove();
     $(tempElement).find(".inline_visible").remove();
     $(tempElement).find(".autocomplete_ghost").remove(); // Exclude unaccepted autocomplete
+    $(tempElement).find(".autocomplete_loading").remove(); // Exclude loading indicator
     tempElement.innerHTML = tempElement.innerHTML.replaceAll("<div><br></div>", "<br>").replaceAll("</div>", "<br>").replaceAll("<div>", "")                
     tempElement.innerHTML = tempElement.innerHTML.replaceAll("<br>", "\n");
     
@@ -230,6 +231,7 @@ function get_visible_text(child) {
     $(tempElement).find(".no_show").remove();
     $(tempElement).find(".inline_visible").remove();
     $(tempElement).find(".autocomplete_ghost").remove(); // Exclude unaccepted autocomplete
+    $(tempElement).find(".autocomplete_loading").remove(); // Exclude loading indicator
     var plainText = tempElement.textContent || tempElement.innerText;
     tempElement.remove();
     return plainText;

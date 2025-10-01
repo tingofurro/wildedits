@@ -2,7 +2,7 @@
 from llms import generate_json, generate
 import json, utils_prompts
 
-AUTOCOMPLETE_MODEL = "t-gpt-4.1-nano"
+AUTOCOMPLETE_MODEL = "t-gpt-4.1-nano" # "t-gpt-4.1-nano"
 class RecommendationEngine:
     def __init__(self, marker_prompt_fn="prompts/markers.txt", chat_prompt_fn="prompts/chat.txt", chat_initial_prompt_fn="prompts/chat_initial.txt",
                  brainstorm_prompt_fn="prompts/brainstorm.txt", comment_prompt_fn="prompts/comment.txt",
@@ -286,12 +286,38 @@ class RecommendationEngine:
             {"role": "user", "content": populated_prompt},
         ]
 
-        response = generate_json(messages, model=AUTOCOMPLETE_MODEL, step="autocomplete")
+        response = generate_json(messages, model=AUTOCOMPLETE_MODEL, step="autocomplete") # , reasoning_effort="minimal"
         
         if response is None or "completion" not in response:
             return ""
         
         completion_text = response["completion"].strip()
+        
+        # Post-process: find the cursor line and remove matching prefix from completion
+        # Find the start and end of the current line
+        line_start = document_text.rfind('\n', 0, cursor_position) + 1
+        line_end = document_text.find('\n', cursor_position)
+        if line_end == -1:
+            line_end = len(document_text)
+        
+        current_line = document_text[line_start:line_end]
+        
+        # Greedily find the largest prefix of completion that exists in current_line
+        max_prefix_len = 0
+        for i in range(1, len(completion_text) + 1):
+            prefix = completion_text[:i]
+            if prefix in current_line:
+                max_prefix_len = i
+        
+        if max_prefix_len == 0 and line_start - cursor_position > 0:
+            print("Autocomplete failed: no matching prefix found in current line")
+            print("Current line: '%s'" % current_line)
+            print("Completion: '%s'" % completion_text)
+            return ""
+        
+        # Remove the matching prefix
+        completion_text = completion_text[max_prefix_len:].strip()
+        
         print("Autocomplete for position %d: '%s'" % (cursor_position, completion_text[:50]))
         
         return completion_text

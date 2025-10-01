@@ -159,7 +159,7 @@ def app_change_markers_disabled():
     if os.path.exists("documents/%s.json" % doc_id):
         with open("documents/%s.json" % doc_id) as f:
             doc = json.load(f)
-        doc["markers_disabled"] = markers_disabled
+        doc["markers_disabled"] = int(markers_disabled)
         with open("documents/%s.json" % doc_id, "w") as f:
             json.dump(doc, f, indent=4)
         return {"success": True}
@@ -177,7 +177,7 @@ def app_change_autocomplete_disabled():
     if os.path.exists("documents/%s.json" % doc_id):
         with open("documents/%s.json" % doc_id) as f:
             doc = json.load(f)
-        doc["autocomplete_disabled"] = autocomplete_disabled
+        doc["autocomplete_disabled"] = int(autocomplete_disabled)
         with open("documents/%s.json" % doc_id, "w") as f:
             json.dump(doc, f, indent=4)
         return {"success": True}

@@ -55,6 +55,37 @@ function is_cursor_at_line_end() {
     return cursor_pos_in_line >= current_line.trimEnd().length;
 }
 
+function show_autocomplete_loading() {
+    // Remove any existing loading indicator first
+    remove_autocomplete_loading();
+    
+    // Get the selection and range
+    var selection = window.getSelection();
+    if (selection.rangeCount === 0) {
+        return;
+    }
+    
+    var range = selection.getRangeAt(0).cloneRange();
+    
+    // Create a span element for the loading icon
+    var loading_span = document.createElement('span');
+    loading_span.id = 'autocomplete_loading';
+    loading_span.className = 'autocomplete_loading';
+    loading_span.contentEditable = 'false';
+    loading_span.innerHTML = '⋯'; // Three dots for loading
+    
+    // Insert the loading icon at the cursor position - don't manipulate cursor afterward
+    range.collapse(true);
+    range.insertNode(loading_span);
+}
+
+function remove_autocomplete_loading() {
+    var loading_elem = document.getElementById('autocomplete_loading');
+    if (loading_elem) {
+        loading_elem.remove();
+    }
+}
+
 function get_cursor_position_in_document() {
     save_cursor();
     
@@ -90,10 +121,22 @@ function request_autocomplete() {
     autocomplete_cursor_position = cursor_pos;
     autocomplete_in_progress = true;
     
+    // Show loading indicator
+    show_autocomplete_loading();
+    
     var post_obj = {"doc_id": active_doc_id, "cursor_position": cursor_pos};
     
     $.post(api_server + "get_autocomplete", post_obj, function(data) {
+        // Check if the request was cancelled (autocomplete_cursor_position would be -1)
+        if (autocomplete_cursor_position < 0) {
+            console.log("Autocomplete request was cancelled, ignoring result");
+            autocomplete_in_progress = false;
+            remove_autocomplete_loading();
+            return;
+        }
+        
         autocomplete_in_progress = false;
+        remove_autocomplete_loading();
         
         if (data.success && data.completion && data.completion.length > 0) {
             // Check if cursor is still at the same position
@@ -104,6 +147,7 @@ function request_autocomplete() {
         }
     }, "json").fail(function() {
         autocomplete_in_progress = false;
+        remove_autocomplete_loading();
         console.log("Failed to get autocomplete");
     });
 }
@@ -193,6 +237,9 @@ function dismiss_autocomplete() {
     if (ghost_elem) {
         ghost_elem.remove();
     }
+    
+    // Also remove loading indicator if it exists
+    remove_autocomplete_loading();
     
     // Clear state regardless
     autocomplete_text = "";
@@ -285,37 +332,60 @@ function handle_autocomplete_tab() {
 
 function handle_autocomplete_escape() {
     var ghost_elem = document.getElementById('autocomplete_ghost');
-    if (!ghost_elem) {
+    var loading_elem = document.getElementById('autocomplete_loading');
+    
+    // Check if autocomplete is in progress (loading) or already displayed (ghost)
+    if (!ghost_elem && !loading_elem && !autocomplete_in_progress) {
         return false;
     }
     
-    // Get the position where autocomplete was displayed
-    var restore_line = typeof autocomplete_last_cursor_line !== 'undefined' ? autocomplete_last_cursor_line : (cursor_index ? cursor_index.line_index : 0);
-    var restore_pos = typeof autocomplete_last_cursor_pos !== 'undefined' ? autocomplete_last_cursor_pos : (cursor_index ? cursor_index.position : 0);
+    // If autocomplete is in progress, cancel it
+    if (autocomplete_in_progress) {
+        autocomplete_in_progress = false;
+        autocomplete_cursor_position = -1;
+        
+        // Simply remove the loading element without any cursor manipulation
+        var loading_elem = document.getElementById('autocomplete_loading');
+        if (loading_elem) {
+            loading_elem.remove();
+        }
+        
+        console.log("Cancelled pending autocomplete request");
+        return true;
+    }
     
-    // Remove ghost element first
-    ghost_elem.remove();
+    // If ghost text is displayed, handle it normally
+    if (ghost_elem) {
+        // Get the position where autocomplete was displayed
+        var restore_line = typeof autocomplete_last_cursor_line !== 'undefined' ? autocomplete_last_cursor_line : (cursor_index ? cursor_index.line_index : 0);
+        var restore_pos = typeof autocomplete_last_cursor_pos !== 'undefined' ? autocomplete_last_cursor_pos : (cursor_index ? cursor_index.position : 0);
+        
+        // Remove ghost element first
+        ghost_elem.remove();
+        
+        // Clear state
+        autocomplete_active = false;
+        autocomplete_text = "";
+        autocomplete_cursor_position = -1;
+        autocomplete_last_cursor_line = -1;
+        autocomplete_last_cursor_pos = -1;
+        
+        // Save the current document state first to capture any typed text
+        // Then reload view with cursor at original position
+        setTimeout(function() {
+            save_document_state([], [], function() {
+                cursor_index = {
+                    line_index: restore_line,
+                    position: restore_pos
+                };
+                reload_view();
+            });
+        }, 10);
+        
+        return true;
+    }
     
-    // Clear state
-    autocomplete_active = false;
-    autocomplete_text = "";
-    autocomplete_cursor_position = -1;
-    autocomplete_last_cursor_line = -1;
-    autocomplete_last_cursor_pos = -1;
-    
-    // Save the current document state first to capture any typed text
-    // Then reload view with cursor at original position
-    setTimeout(function() {
-        save_document_state([], [], function() {
-            cursor_index = {
-                line_index: restore_line,
-                position: restore_pos
-            };
-            reload_view();
-        });
-    }, 10);
-    
-    return true;
+    return false;
 }
 
 function toggle_autocomplete() {

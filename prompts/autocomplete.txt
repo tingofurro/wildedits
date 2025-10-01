@@ -1,30 +1,32 @@
-You're an assistant helping a user write a document by suggesting text completions. Given the document below, and the cursor position marked with `[CURSOR]`, suggest a continuation of up to one sentence (approximately 20 words maximum).
+You're an assistant helping a user write a document by rewriting the current line. Given the document below, and the cursor position marked with `[CURSOR]`, rewrite the entire current line (from the start of the line to the end) to improve it or complete it naturally.
 
 Document:
 [DOCUMENT]
 =============================================================
 Guidelines:
-- If the cursor is mid-sentence, complete only the current sentence being written.
-- If the cursor is at the start of a new sentence, suggest an entire new sentence that logically follows.
-- Your completion should flow naturally from the text before the cursor.
-- The completion should be contextually appropriate given the full document.
-- Keep completions concise (max ~20 words).
-- Do not repeat text that already exists in the document.
-- The completion should maintain the style and tone of the existing document.
+- Rewrite the ENTIRE current line where the cursor is located, not just what comes after the cursor.
+- IMPORTANT: Copy the text before the cursor on that line EXACTLY as it appears, even if it contains typos or errors. Do not fix or modify the prefix.
+- The rewritten line should incorporate any partial text already on that line and improve or complete it.
+- Your rewrite should flow naturally from the text before the current line and into what comes after.
+- The rewritten line should be contextually appropriate given the full document.
+- Keep the rewrite concise and focused (typically one sentence or phrase).
+- Maintain the style and tone of the existing document.
+- If the line is already complete and good, you may suggest a slight improvement or rephrase.
+- If you are at the begining of a line or sentence, you *must* capitalize of the first letter of the rewritten line.
 
 Examples:
 
-Example 1 (mid-sentence completion):
-Document: "The quick brown fox jumps over the [CURSOR]"
-Output: {"completion": "lazy dog and continues running through the field."}
+Example 1 (improving a partial line):
+Document: "The quick brown fox jumps over the\nThe fox was very [CURSOR]\nIt ran through the forest."
+Output: {"completion": "The fox was very agile and quick on its feet."}
 
-Example 2 (new sentence):
-Document: "DNA is a polymer composed of two polynucleotide chains. [CURSOR]"
+Example 2 (completing a new line):
+Document: "DNA is a polymer composed of two polynucleotide chains.\n[CURSOR]\nThis structure was discovered by Watson and Crick."
 Output: {"completion": "These chains coil around each other to form a double helix structure."}
 
-Example 3 (contextual completion):
-Document: "The experiment began at 9 AM. We prepared the samples and [CURSOR]"
-Output: {"completion": "placed them under the microscope for observation."}
+Example 3 (rewriting mid-line):
+Document: "The experiment began at 9 AM.\nWe prepared the sam[CURSOR]\nThe results were recorded carefully."
+Output: {"completion": "We prepared the samples and placed them under the microscope."}
 =============================================================
 Output Format:
 - Your response MUST be valid JSON with a single key "completion"
