@@ -1,6 +1,9 @@
-// If click ESC, cancel marker_timer if it exists
+// If click ESC, cancel marker_timer if it exists (only when autocomplete is NOT active)
 $(document).keyup(function(e) {
     if (e.key === "Escape") { // escape key maps to keycode `27`
+        // Note: autocomplete Escape is handled in intercept_shortcut_keys in main.html
+        // This only fires if autocomplete doesn't consume it
+        
         // if there's an active comment, close it
         var action_taken = markers_on_escape_key();
         if(!action_taken) {

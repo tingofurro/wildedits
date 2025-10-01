@@ -166,6 +166,24 @@ def app_change_markers_disabled():
     return {"success": False}
 
 
+@app.route("/change_autocomplete_disabled", methods=["POST"])
+def app_change_autocomplete_disabled():
+    doc_id = request.form["doc_id"]
+    request.doc_id = doc_id
+    autocomplete_disabled = request.form["autocomplete_disabled"]
+    if autocomplete_disabled not in ["0", "1"]:
+        autocomplete_disabled = "0"
+
+    if os.path.exists("documents/%s.json" % doc_id):
+        with open("documents/%s.json" % doc_id) as f:
+            doc = json.load(f)
+        doc["autocomplete_disabled"] = autocomplete_disabled
+        with open("documents/%s.json" % doc_id, "w") as f:
+            json.dump(doc, f, indent=4)
+        return {"success": True}
+    return {"success": False}
+
+
 @app.route("/delete_doc/<doc_id>")
 def app_delete_doc(doc_id):
     request.doc_id = doc_id
@@ -766,3 +784,26 @@ def app_interpret_shortcut():
         response = engine.generate_shortcut_interpretation(latest_text, shortcut_query, document_id=doc_id)
         return {"success": True, "response": response}
     return {"success": False}
+
+
+@app.route("/get_autocomplete", methods=["POST"])
+def app_get_autocomplete():
+    doc_id = request.form["doc_id"]
+    request.doc_id = doc_id
+    cursor_position = int(request.form["cursor_position"])
+    
+    if not os.path.exists("documents/%s.json" % doc_id):
+        return {"success": False, "completion": ""}
+    
+    with open("documents/%s.json" % doc_id, "r") as f:
+        doc = json.load(f)
+    
+    if doc is None:
+        return {"success": False, "completion": ""}
+    
+    latest_text = doc["document_history"][-1]["text"]
+    
+    # Generate autocomplete suggestion
+    completion = engine.generate_autocomplete(latest_text, cursor_position, document_id=doc_id)
+    
+    return {"success": True, "completion": completion}

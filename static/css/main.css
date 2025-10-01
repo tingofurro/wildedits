@@ -1045,3 +1045,12 @@ body.no-transition #sidebar_toggle {
 .study_visible {
     display: none;
 }
+
+/* Autocomplete ghost text styling */
+.autocomplete_ghost {
+    color: #999;
+    font-style: italic;
+    opacity: 0.6;
+    pointer-events: none;
+    user-select: none;
+}

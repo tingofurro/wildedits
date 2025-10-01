@@ -20,6 +20,7 @@ function get_current_text() {
     
     $(tempElement).find(".no_show").remove();
     $(tempElement).find(".inline_visible").remove();
+    $(tempElement).find(".autocomplete_ghost").remove(); // Exclude unaccepted autocomplete
     tempElement.innerHTML = tempElement.innerHTML.replaceAll("<div><br></div>", "<br>").replaceAll("</div>", "<br>").replaceAll("<div>", "")                
     tempElement.innerHTML = tempElement.innerHTML.replaceAll("<br>", "\n");
     
@@ -228,6 +229,7 @@ function get_visible_text(child) {
     tempElement.innerHTML = child.innerHTML;
     $(tempElement).find(".no_show").remove();
     $(tempElement).find(".inline_visible").remove();
+    $(tempElement).find(".autocomplete_ghost").remove(); // Exclude unaccepted autocomplete
     var plainText = tempElement.textContent || tempElement.innerText;
     tempElement.remove();
     return plainText;
@@ -244,6 +246,11 @@ function save_cursor() {
         if(selection_text.length > 0) {
             var rect = range.getBoundingClientRect();
             $("#hover_button").css("top", (rect.bottom+window.scrollY+7)+"px").css("left", (((rect.right+rect.left)/2)+window.scrollX)+"px").show();
+            
+            // Dismiss autocomplete if text is selected
+            if(autocomplete_active) {
+                dismiss_autocomplete();
+            }
         }
 
         var main_container = $("#main_container")[0];
@@ -278,6 +285,11 @@ function save_cursor() {
             }
         }
         cursor_index = { line_index, position };
+        
+        // Check if cursor moved (for arrow keys, clicks, etc.) and dismiss autocomplete
+        if (typeof check_cursor_moved_and_dismiss === 'function') {
+            check_cursor_moved_and_dismiss();
+        }
     }
 }
 function reload_cursor(cursor_index) {
@@ -372,8 +384,14 @@ function change_tab(new_tab) {
     }
 }
 function handle_editor_change(e) {
+    // Dismiss autocomplete FIRST if user is typing
+    if(typeof autocomplete_active !== 'undefined' && autocomplete_active) {
+        dismiss_autocomplete();
+    }
+    
     save_cursor();
     markers_on_editor_change();
+    check_autocomplete_trigger();
 }
 function undo_edit() {
     $.post(`${api_server}undo`, {"doc_id": active_doc_id}, function(data) {

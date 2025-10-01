@@ -1,3 +1,4 @@
-- Undo/Redo
-- Auto-complete
+- Undo/Redo Ctrl+Z shortcut
+- Auto-naming
 - Market of markers
+- Fix the \n problem in utils_diff

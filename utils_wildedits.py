@@ -44,6 +44,7 @@ def create_starter_document(user_id, initial_text="", marker_type=None):
         "comments": [],
         "view_mode": "Inline",
         "markers_disabled": "0",
+        "autocomplete_disabled": "0",
         "view_mode_history": []
     }
 

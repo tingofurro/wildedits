@@ -2,19 +2,20 @@
 from llms import generate_json, generate
 import json, utils_prompts
 
-
+AUTOCOMPLETE_MODEL = "t-gpt-4.1-nano"
 class RecommendationEngine:
     def __init__(self, marker_prompt_fn="prompts/markers.txt", chat_prompt_fn="prompts/chat.txt", chat_initial_prompt_fn="prompts/chat_initial.txt",
                  brainstorm_prompt_fn="prompts/brainstorm.txt", comment_prompt_fn="prompts/comment.txt",
-                 verify_prompt_fn="prompts/verify.txt", shortcut_prompt_fn="prompts/shortcut.txt",
+                 verify_prompt_fn="prompts/verify.txt", shortcut_prompt_fn="prompts/shortcut.txt", autocomplete_prompt_fn="prompts/autocomplete.txt",
                  model_card="t-gpt-5-chat"): # gpt-3.5-turbo
         self.marker_prompt_fn = marker_prompt_fn
         self.chat_prompt_fn = chat_prompt_fn
         self.chat_initial_prompt_fn = chat_initial_prompt_fn
-        self.brainstorm_prompt_fn = brainstorm_prompt_fn
+        self.brainstorm_prompt_fn = brainstorm_prompt_fn #
         self.comment_prompt_fn = comment_prompt_fn
         self.verify_prompt_fn = verify_prompt_fn
         self.shortcut_prompt_fn = shortcut_prompt_fn
+        self.autocomplete_prompt_fn = autocomplete_prompt_fn
 
         self.model_card = model_card
 
@@ -263,6 +264,37 @@ class RecommendationEngine:
         print("Shortcut interpreter for query '%s' returned '%s'" % (query, response_str))
 
         return "BRAINSTORM" if response_str == "paraphrase" else "COMMENT"
+
+    def generate_autocomplete(self, document_text, cursor_position, document_id):
+        with open(self.autocomplete_prompt_fn, "r") as f:
+            prompt = f.read().strip()
+
+        # Handle edge cases
+        if len(document_text) == 0:
+            return ""
+        if cursor_position < 0 or cursor_position > len(document_text):
+            return ""
+
+        # Insert cursor marker
+        text_with_cursor = document_text[:cursor_position] + "[CURSOR]" + document_text[cursor_position:]
+        
+        # Populate the prompt
+        populated_prompt = utils_prompts.populate_prompt(prompt, {"document": text_with_cursor})
+
+        messages = [
+            {"role": "system", "content": "You are a helpful writing assistant."},
+            {"role": "user", "content": populated_prompt},
+        ]
+
+        response = generate_json(messages, model=AUTOCOMPLETE_MODEL, step="autocomplete")
+        
+        if response is None or "completion" not in response:
+            return ""
+        
+        completion_text = response["completion"].strip()
+        print("Autocomplete for position %d: '%s'" % (cursor_position, completion_text[:50]))
+        
+        return completion_text
 
 
 if __name__ == "__main__":

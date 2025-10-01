@@ -152,6 +152,16 @@
                 <span id="doc_num_words"></span> words &mdash;
                 <span id="doc_num_chars"></span> chars
             </div>
+            <div id="autocomplete_toggle_row" class="subheader review_mode_hidden">
+                <span class="material-icons">auto_awesome</span>
+                Autocomplete
+                <div class="checkbox checkbox_autocomplete">
+                    <label class="switch" for="checkbox">
+                        <input type="checkbox" id="checkbox_autocomplete" /> 
+                        <div class="slider round" onclick="toggle_autocomplete();"></div>
+                    </label>
+                </div>
+            </div>
             <div id="edit_view_mode_row" class="subheader review_mode_hidden">
                 <span class="material-icons">rate_review</span>
                 View <span id="view_type"></span>
@@ -291,6 +301,26 @@
             restoreSidebarState();
             
             window.onload = function() {
+                // Add global keydown handler for autocomplete (capture phase to get events first)
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === "Tab" && typeof handle_autocomplete_tab !== 'undefined') {
+                        if (handle_autocomplete_tab()) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            return false;
+                        }
+                    }
+                    if (e.key === "Escape" && typeof handle_autocomplete_escape !== 'undefined') {
+                        if (handle_autocomplete_escape()) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            return false;
+                        }
+                    }
+                }, true); // true = capture phase
+                
                 document.getElementById('main_container').addEventListener('input', handle_editor_change);
                 document.getElementById('main_container').addEventListener('keydown', intercept_shortcut_keys);
                 document.getElementById('main_container').addEventListener('keyup', save_cursor); // This is specific to if the user uses arrows, home, end, etc.
@@ -320,6 +350,7 @@
                 }
 
                 change_markers_to(start_document.markers_disabled, true);
+                change_autocomplete_to(start_document.autocomplete_disabled || false, true);
                 
                 reload_view();
                 change_tab(($("body").hasClass("no_chat"))?"comment":"chat");
@@ -331,6 +362,7 @@
             };
         </script>
         <script src="/js/editor.js"></script>
+        <script src="/js/autocomplete.js"></script>
         <script src="/js/suggestions.js"></script>
         <script src="/js/conv.js"></script>
         <script src="/js/markers.js"></script>
