@@ -29,6 +29,7 @@ def create_starter_document(user_id, initial_text="", marker_type=None):
         "owner_user_id": user_id,
         "name": "New Document",
         "document_history": [{"text": initial_text, "timestamp": datetime.now().isoformat(), "suggestion_ids": []}],
+        "history_index": 0,
         "suggestions": [],
         "markers": default_markers,
         "conversation": [

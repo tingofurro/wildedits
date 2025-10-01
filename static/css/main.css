@@ -27,6 +27,37 @@ body {
     box-sizing: border-box;
     height: 43px;
     transition: width 0.3s ease-in-out;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+#undo_redo_controls {
+    display: flex;
+    gap: 5px;
+    margin-left: 10px;
+}
+#undo_redo_controls button {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 5px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+#undo_redo_controls button:hover:not(:disabled) {
+    background: #e8e8e8;
+    border-color: #bbb;
+}
+#undo_redo_controls button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+#undo_redo_controls button .material-icons {
+    font-size: 18px;
+    color: #555;
 }
 #main_container, #review_main_container {
     outline: none;
@@ -353,6 +384,12 @@ body.no-transition #sidebar_toggle {
 #document_name_input:hover {
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid #ccc;
+}
+#main_header > .material-icons:first-child {
+    margin-left: 15px;
+}
+#undo_redo_controls button:disabled .material-icons {
+    color: #aaa;
 }
 /* Marker menu */
 .subheader {

@@ -95,6 +95,14 @@
             <div id="main_header" class="header">
                 <span class="material-icons">description</span>
                 <input type="text" id="document_name_input" placeholder="Choose Document Name" value="{{active_doc.name}}" onchange="save_document_title('{{active_doc.id}}');">
+                <div id="undo_redo_controls" class="review_mode_hidden">
+                    <button id="undo_btn" onclick="undo_edit();" title="Undo" disabled>
+                        <span class="material-icons">undo</span>
+                    </button>
+                    <button id="redo_btn" onclick="redo_edit();" title="Redo" disabled>
+                        <span class="material-icons">redo</span>
+                    </button>
+                </div>
                 <span class="review_mode_visible review_mode_inline">&mdash; Audit Mode</span>
                 <div id="markers_countdown">
                     <div class="line1">Markers reload in <span id="countdown_nb">5</span> sec.</div>
@@ -316,6 +324,10 @@
                 reload_view();
                 change_tab(($("body").hasClass("no_chat"))?"comment":"chat");
                 if(window.location.href.indexOf("/review") > -1) {start_review();}
+                
+                // Initialize undo/redo button states
+                var history_idx = start_document.history_index !== undefined ? start_document.history_index : doc_history.length - 1;
+                update_undo_redo_buttons(history_idx > 0, history_idx < doc_history.length - 1);
             };
         </script>
         <script src="/js/editor.js"></script>

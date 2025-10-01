@@ -375,3 +375,27 @@ function handle_editor_change(e) {
     save_cursor();
     markers_on_editor_change();
 }
+function undo_edit() {
+    $.post(`${api_server}undo`, {"doc_id": active_doc_id}, function(data) {
+        if (data.success) {
+            current_text = data.text;
+            suggestions = data.suggestions;
+            reload_view();
+            update_undo_redo_buttons(data.can_undo, data.can_redo);
+        }
+    }, "json");
+}
+function redo_edit() {
+    $.post(`${api_server}redo`, {"doc_id": active_doc_id}, function(data) {
+        if (data.success) {
+            current_text = data.text;
+            suggestions = data.suggestions;
+            reload_view();
+            update_undo_redo_buttons(data.can_undo, data.can_redo);
+        }
+    }, "json");
+}
+function update_undo_redo_buttons(can_undo, can_redo) {
+    $("#undo_btn").prop("disabled", !can_undo);
+    $("#redo_btn").prop("disabled", !can_redo);
+}

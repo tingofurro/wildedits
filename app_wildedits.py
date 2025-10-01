@@ -281,7 +281,6 @@ def app_save_doc_state():
             sug["action"] = "deleted_by_user"
         if sug["id"] in user_accepted_suggestion_ids:
             sug["action"] = "accepted_by_user"
-            print(">> Accepted regular edit")
         if sug["id"] in user_autodel_suggestion_ids:
             sug["action"] = "autodel_by_user"
         if sug["id"] in latest_anchor_map:
@@ -320,8 +319,14 @@ def app_save_doc_state():
                 plural = "suggestions" if count > 1 else "suggestion"
                 old_comm["conversation"].append({"id": str(ObjectId()), "sender": "system", "message": "%d comment %s %s." % (count, plural, acc_rej), "timestamp": datetime.now().isoformat()})
 
+    # Handle undo/redo: get current history index and truncate future history if needed
+    history_idx = doc.get("history_index", len(doc["document_history"]) - 1)
+    if history_idx < len(doc["document_history"]) - 1:
+        doc["document_history"] = doc["document_history"][:history_idx + 1]
+
     suggestion_ids = [s["id"] for s in all_suggestions if "action" not in s]
-    doc["document_history"].append({"text": new_text, "suggestion_ids": suggestion_ids, "timestamp": datetime.now().isoformat(), "accepted_suggestion_ids": user_accepted_suggestion_ids}) # Last bit for tracability
+    doc["document_history"].append({"text": new_text, "suggestion_ids": suggestion_ids, "timestamp": datetime.now().isoformat(), "accepted_suggestion_ids": user_accepted_suggestion_ids})
+    doc["history_index"] = len(doc["document_history"]) - 1
 
     # Redo the write, and only return once the write is done
     with open("documents/%s.json" % doc_id, "w") as f:
@@ -329,6 +334,56 @@ def app_save_doc_state():
         f.flush()
         f.close()
     return {"success": True}
+
+
+@app.route("/undo", methods=["POST"])
+def app_undo():
+    doc_id = request.form["doc_id"]
+    request.doc_id = doc_id
+
+    if os.path.exists("documents/%s.json" % doc_id):
+        with open("documents/%s.json" % doc_id) as f:
+            doc = json.load(f)
+        
+        history_idx = doc.get("history_index", len(doc["document_history"]) - 1)
+        
+        if history_idx > 0:
+            doc["history_index"] = history_idx - 1
+            with open("documents/%s.json" % doc_id, "w") as f:
+                json.dump(doc, f, indent=4)
+            
+            current_state = doc["document_history"][doc["history_index"]]
+            active_suggestions = [s for s in doc["suggestions"] if s["id"] in current_state.get("suggestion_ids", []) and "action" not in s]
+            
+            return {"success": True, "text": current_state["text"], "suggestions": active_suggestions, "can_undo": doc["history_index"] > 0, "can_redo": doc["history_index"] < len(doc["document_history"]) - 1}
+        
+        return {"success": False, "message": "Nothing to undo"}
+    return {"success": False}
+
+
+@app.route("/redo", methods=["POST"])
+def app_redo():
+    doc_id = request.form["doc_id"]
+    request.doc_id = doc_id
+
+    if os.path.exists("documents/%s.json" % doc_id):
+        with open("documents/%s.json" % doc_id) as f:
+            doc = json.load(f)
+        
+        history_idx = doc.get("history_index", len(doc["document_history"]) - 1)
+        
+        if history_idx < len(doc["document_history"]) - 1:
+            doc["history_index"] = history_idx + 1
+            with open("documents/%s.json" % doc_id, "w") as f:
+                json.dump(doc, f, indent=4)
+            
+            current_state = doc["document_history"][doc["history_index"]]
+            active_suggestions = [s for s in doc["suggestions"] if s["id"] in current_state.get("suggestion_ids", []) and "action" not in s]
+            
+            return {"success": True, "text": current_state["text"], "suggestions": active_suggestions, "can_undo": doc["history_index"] > 0, "can_redo": doc["history_index"] < len(doc["document_history"]) - 1}
+        
+        return {"success": False, "message": "Nothing to redo"}
+    return {"success": False}
 
 
 @app.route("/get_markers_suggestions", methods=["POST"])
