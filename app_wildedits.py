@@ -127,6 +127,42 @@ def app_save_document_title():
     return {"success": True}
 
 
+@app.route("/auto_name_document", methods=["POST"])
+def app_auto_name_document():
+    doc_id = request.form["doc_id"]
+    request.doc_id = doc_id
+
+    if not os.path.exists("documents/%s.json" % doc_id):
+        return {"success": False, "error": "Document not found"}
+
+    with open("documents/%s.json" % doc_id) as f:
+        doc = json.load(f)
+
+    if doc.get("owner_user_id", -1) != request.user_id:
+        return {"success": False, "error": "Unauthorized"}
+
+    if doc["name"] != "New Document":
+        return {"success": False, "error": "Document already named"}
+
+    document_text = doc["document_history"][-1]["text"]
+    user_documents = get_user_documents(request.user_id)
+    existing_names = [d["name"] for d in user_documents]
+
+    generated_name = engine.generate_document_name(document_text, existing_names, document_id=doc_id)
+
+    final_name = generated_name
+    counter = 2
+    while final_name in existing_names:
+        final_name = "%s (%d)" % (generated_name, counter)
+        counter += 1
+
+    doc["name"] = final_name
+    with open("documents/%s.json" % doc_id, "w") as f:
+        json.dump(doc, f, indent=4)
+
+    return {"success": True, "new_name": final_name}
+
+
 @app.route("/change_view_mode", methods=["POST"])
 def app_change_view_mode():
     doc_id = request.form["doc_id"]

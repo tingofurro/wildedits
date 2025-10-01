@@ -1,0 +1,16 @@
+You are tasked with generating a short, descriptive title for a document based on its content.
+
+Document Excerpt:
+[DOCUMENT_EXCERPT]
+
+Existing Document Names (avoid duplicating these):
+[EXISTING_NAMES]
+
+Instructions:
+- Generate a concise, informative title that captures the main topic or purpose of the document
+- The title should be 4-5 words maximum
+- Make it descriptive but brief
+- Avoid using any of the existing document names listed above
+- Return ONLY the title text, nothing else (no quotes, no explanation, no additional text)
+
+Title:

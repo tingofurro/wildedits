@@ -5,6 +5,7 @@ var current_text = doc_history[doc_history.length-1].text;
 var local_disabled = $("body").hasClass("no_local");
 var selection_text;
 var active_tab = "";
+var auto_naming_attempted = (start_document.name != "New Document");
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -66,6 +67,7 @@ function save_document_state(user_accepted_suggestion_ids, user_rejected_suggest
         doc_history.push({"text": new_plain_text});
         // can_undo = doc_history.length > 1, can_redo = false (we're at the end)
         update_undo_redo_buttons(doc_history.length > 1, false);
+        check_and_trigger_auto_naming();
         if(callback_fn) {
             callback_fn();
         }
@@ -359,10 +361,76 @@ function get_text_anchor_idx() {
 }
 function save_document_title(doc_id) {
     var new_title = $("#document_name_input").val();
+    auto_naming_attempted = true;
     var post_obj = {"doc_id": doc_id, "new_title": new_title};
     $.post(`${api_server}save_document_title`, post_obj, function(data) {
         $(`.document_item_${doc_id} span`).html(new_title);
     }, "json");
+}
+function adjust_document_name_width() {
+    var input = $("#document_name_input");
+    var value = input.val();
+    var temp_span = $("<span>").css({
+        "font-size": input.css("font-size"),
+        "font-family": input.css("font-family"),
+        "font-weight": input.css("font-weight"),
+        "visibility": "hidden",
+        "position": "absolute",
+        "white-space": "nowrap"
+    }).text(value || input.attr("placeholder"));
+    $("body").append(temp_span);
+    var text_width = temp_span.width() + 20;
+    temp_span.remove();
+    var min_width = 150;
+    var max_width = 400;
+    var new_width = Math.max(min_width, Math.min(max_width, text_width));
+    input.css("width", new_width + "px");
+}
+function check_and_trigger_auto_naming() {
+    if(auto_naming_attempted) {
+        return;
+    }
+    var current_name = $("#document_name_input").val();
+    if(current_name != "New Document") {
+        auto_naming_attempted = true;
+        return;
+    }
+    var current_text_length = get_current_text().length;
+    if(current_text_length >= 100) {
+        trigger_auto_naming();
+    }
+}
+function trigger_auto_naming() {
+    auto_naming_attempted = true;
+    var post_obj = {"doc_id": active_doc_id};
+    $.post(`${api_server}auto_name_document`, post_obj, function(data) {
+        if(data.success) {
+            animate_new_name(data.new_name);
+        }
+    }, "json").fail(function() {
+        console.log("Auto-naming failed");
+    });
+}
+function animate_new_name(new_name) {
+    var current_display = "";
+    var char_index = 0;
+    var delay = 60;
+    
+    function add_next_char() {
+        if(char_index < new_name.length) {
+            current_display += new_name[char_index];
+            $("#document_name_input").val(current_display);
+            $(`.document_item_${active_doc_id} span`).html(current_display);
+            adjust_document_name_width();
+            char_index++;
+            setTimeout(add_next_char, delay);
+        }
+    }
+    
+    $("#document_name_input").val("");
+    $(`.document_item_${active_doc_id} span`).html("");
+    adjust_document_name_width();
+    add_next_char();
 }
 function change_tab(new_tab) {
     $(".active_tab").removeClass("active_tab");

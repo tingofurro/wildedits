@@ -375,6 +375,12 @@
                 // Initialize undo/redo button states
                 var history_idx = start_document.history_index !== undefined ? start_document.history_index : doc_history.length - 1;
                 update_undo_redo_buttons(history_idx > 0, history_idx < doc_history.length - 1);
+                
+                // Initialize document name input width and add event listener
+                if(typeof adjust_document_name_width !== 'undefined') {
+                    adjust_document_name_width();
+                    $('#document_name_input').on('input', adjust_document_name_width);
+                }
             };
         </script>
         <script src="/js/editor.js"></script>

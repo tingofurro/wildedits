@@ -364,3 +364,16 @@ class DiffScorer:
         for text1, text2 in zip(texts1, texts2):
             scores.append(self.score_one(text1, text2))
         return {"scores": scores}
+
+if __name__ == "__main__":
+    text1 = """The quick brown fox jumps over the lazy dog.
+
+The second sentence is a bit too long."""
+
+    text2 = """The quick brown fox jumps over the lazy dog.
+
+## Header
+
+The second sentence is a bit too long."""
+
+    print(get_edit_operations(text1, text2))

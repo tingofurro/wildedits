@@ -7,7 +7,7 @@ class RecommendationEngine:
     def __init__(self, marker_prompt_fn="prompts/markers.txt", chat_prompt_fn="prompts/chat.txt", chat_initial_prompt_fn="prompts/chat_initial.txt",
                  brainstorm_prompt_fn="prompts/brainstorm.txt", comment_prompt_fn="prompts/comment.txt",
                  verify_prompt_fn="prompts/verify.txt", shortcut_prompt_fn="prompts/shortcut.txt", autocomplete_prompt_fn="prompts/autocomplete.txt",
-                 model_card="t-gpt-5-chat"): # gpt-3.5-turbo
+                 autonaming_prompt_fn="prompts/autoname.txt", model_card="t-gpt-5-chat"): # gpt-3.5-turbo
         self.marker_prompt_fn = marker_prompt_fn
         self.chat_prompt_fn = chat_prompt_fn
         self.chat_initial_prompt_fn = chat_initial_prompt_fn
@@ -16,6 +16,7 @@ class RecommendationEngine:
         self.verify_prompt_fn = verify_prompt_fn
         self.shortcut_prompt_fn = shortcut_prompt_fn
         self.autocomplete_prompt_fn = autocomplete_prompt_fn
+        self.autonaming_prompt_fn = autonaming_prompt_fn
 
         self.model_card = model_card
 
@@ -95,7 +96,7 @@ class RecommendationEngine:
             conversation_str += "%s: %s\n" % (msg["sender"], msg["message"])
 
         prompt_populated = utils_prompts.populate_prompt(prompt, {"instruction": conversation_str})
-        messages = [{"role": "system", "content": prompt_populated}]
+        messages = [{"role": "user", "content": prompt_populated}]
 
         model_response = generate_json(messages, model=self.model_card, step="chat_initial") # , document_id=document_id
         model_reply = "I'm sorry, an error occurred, can you try again?"
@@ -321,6 +322,33 @@ class RecommendationEngine:
         print("Autocomplete for position %d: '%s'" % (cursor_position, completion_text[:50]))
         
         return completion_text
+
+    def generate_document_name(self, document_text, existing_names, document_id):
+        with open(self.autonaming_prompt_fn, "r") as f:
+            prompt = f.read()
+        
+        document_excerpt = document_text[:500].strip()
+        
+        existing_names_str = "\n".join(["- %s" % name for name in existing_names if name != "New Document"])
+        if not existing_names_str:
+            existing_names_str = "(No existing documents)"
+        
+        populated_prompt = utils_prompts.populate_prompt(prompt, {"DOCUMENT_EXCERPT": document_excerpt, "EXISTING_NAMES": existing_names_str})
+
+        print(">>>>", populated_prompt)
+        
+        messages = [{"role": "user", "content": populated_prompt}]
+        
+        try:
+            generated_name = generate(messages, model=self.model_card, step="autoname")
+            if generated_name:
+                generated_name = generated_name.strip().strip('"').strip("'")
+                return generated_name if generated_name else "Untitled Document"
+            else:
+                return "Untitled Document"
+        except Exception as e:
+            print("Auto-naming error: %s" % str(e))
+            return "Untitled Document"
 
 
 if __name__ == "__main__":

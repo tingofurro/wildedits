@@ -1,4 +1,2 @@
-- Undo/Redo Ctrl+Z shortcut
-- Auto-naming
 - Market of markers
-- Fix the \n problem in utils_diff
+- Cost estimates still for all the completions

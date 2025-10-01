@@ -329,10 +329,9 @@ body.no-transition #sidebar_toggle {
 }
 .delete_doc_icon {
     font-size: 14px;
-    float: right;
-    vertical-align: middle;
     color: #e0e0e0;
     display: none;
+    flex-shrink: 0;
 }
 .active_document_item .delete_doc_icon {
     display: block;
@@ -368,6 +367,21 @@ body.no-transition #sidebar_toggle {
     color: #e0e0e0;
     font-family: "Roboto Condensed";
     font-weight: 300;
+    display: flex;
+    align-items: center;
+    position: relative;
+    max-width: 242px;
+    box-sizing: border-box;
+}
+.document_item span {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 5px;
+    display: block;
+    width: 205px;
 }
 .active_document_item {
     background-color: rgb(16, 100, 163);
@@ -379,11 +393,21 @@ body.no-transition #sidebar_toggle {
     background: transparent;
     border: 1px solid transparent;
     padding: 2px 7px;
-    width: 210px;
+    min-width: 150px;
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: width 0.1s ease;
 }
 #document_name_input:hover {
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid #ccc;
+}
+#document_name_input:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid #ccc;
+    outline: none;
 }
 #main_header > .material-icons:first-child {
     margin-left: 15px;
