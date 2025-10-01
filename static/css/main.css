@@ -17,6 +17,7 @@ body {
 #main_box {
     position: relative;
     margin-left: 250px;
+    transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
 }
 #main_header {
     position: fixed;
@@ -25,6 +26,7 @@ body {
     background: white;
     box-sizing: border-box;
     height: 43px;
+    transition: width 0.3s ease-in-out;
 }
 #main_container, #review_main_container {
     outline: none;
@@ -197,6 +199,13 @@ body {
     box-sizing: border-box;
     color: white;
     font-size: 16px;
+    transition: transform 0.3s ease-in-out;
+}
+body.no-transition #column_left,
+body.no-transition #main_box,
+body.no-transition #main_header,
+body.no-transition #sidebar_toggle {
+    transition: none !important;
 }
 .demo_mode #column_left {
     width: 110px;   
@@ -205,6 +214,49 @@ body {
     margin-left: 110px;
 }
 .no_menu #column_left {
+    display: none;
+}
+.collapsed-sidebar #column_left {
+    transform: translateX(-100%);
+}
+.collapsed-sidebar #main_box {
+    margin-left: 0px;
+}
+.collapsed-sidebar #main_box, .collapsed-sidebar #main_header {
+    width: calc(100% - 250px);
+}
+.collapsed-sidebar #sidebar_toggle {
+    left: 0px;
+}
+.collapsed-sidebar #sidebar_toggle .material-icons {
+    transform: rotate(180deg);
+}
+#sidebar_toggle {
+    position: fixed;
+    top: 50%;
+    left: 250px;
+    transform: translateY(-50%);
+    background-color: #3f0f40;
+    color: white;
+    width: 30px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.2);
+    transition: left 0.3s ease-in-out, background-color 0.2s;
+}
+#sidebar_toggle:hover {
+    background-color: #5a1f5b;
+}
+#sidebar_toggle .material-icons {
+    font-size: 24px;
+}
+.no_menu #sidebar_toggle {
     display: none;
 }
 #logo {

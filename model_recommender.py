@@ -16,7 +16,6 @@ class RecommendationEngine:
         self.verify_prompt_fn = verify_prompt_fn
         self.shortcut_prompt_fn = shortcut_prompt_fn
 
-        print(">>>>", model_card)
         self.model_card = model_card
 
     def get_marker_suggestions(self, text, markers, document_id):

@@ -87,6 +87,9 @@
                 {% endif %}
             </div>
         </div>
+        <div id="sidebar_toggle" onclick="toggleSidebar();">
+            <span class="material-icons">chevron_left</span>
+        </div>
         <div id="main_box">
             {% if active_doc %}
             <div id="main_header" class="header">
@@ -107,7 +110,7 @@
                 <div id="introduction_message">
                     <div id="intro_header">Welcome to WildEdits!</div>
                     <div class="intro_paragraph">
-                        This is a research demo of the paper: <a href="https://arxiv.org/abs/2309.15337" target="_new">Beyond the Chat: Executable and Verifiable Text-Editing with LLMs</a>. Here's a 2-min video introducing WildEdits's features:
+                        This is a research demo of the paper: <a style="text-decoration: underline;" href="https://arxiv.org/abs/2309.15337" target="_new">Beyond the Chat: Executable and Verifiable Text-Editing with LLMs</a>. Here's a 2-min video introducing WildEdits's features:
                     </div>
                     <div id="intro_youtube">
                         <iframe width="800" height="500" src="https://www.youtube.com/embed/q7lf5CIMyvE?si=l0dTAve38YUXDycW" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
@@ -123,7 +126,7 @@
                     <div class="intro_subheader">Contact</div>
                     <div class="intro_paragraph">
                         Found a bug, have a question, or find WildEdits useful? You can contact us at plaban {at} microsoft.com.<br /><br />
-                        We are planning an open-source release of the WildEdits code in the near future. However, if you'd like earlier access for research purposes, please contact us.
+                        WildEdits is open-source, you can find the code <a style="text-decoration: underline;" href="https://github.com/SalesforceAIResearch/inksync" target="_new">here</a>.
                     </div>
                 </div>
 
@@ -259,6 +262,25 @@
             var api_server = "/";
             var start_document = {{active_doc|safe}};
             var active_doc_id = start_document.id;
+            
+            function toggleSidebar() {
+                document.body.classList.toggle('collapsed-sidebar');
+                var isCollapsed = document.body.classList.contains('collapsed-sidebar');
+                localStorage.setItem('sidebarCollapsed', isCollapsed);
+            }
+            
+            function restoreSidebarState() {
+                var isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (isCollapsed) {
+                    document.body.classList.add('no-transition');
+                    document.body.classList.add('collapsed-sidebar');
+                    setTimeout(function() {
+                        document.body.classList.remove('no-transition');
+                    }, 50);
+                }
+            }
+            
+            restoreSidebarState();
             
             window.onload = function() {
                 document.getElementById('main_container').addEventListener('input', handle_editor_change);
