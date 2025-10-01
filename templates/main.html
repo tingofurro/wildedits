@@ -301,8 +301,24 @@
             restoreSidebarState();
             
             window.onload = function() {
-                // Add global keydown handler for autocomplete (capture phase to get events first)
+                // Add global keydown handler for autocomplete and undo/redo (capture phase to get events first)
                 document.addEventListener('keydown', function(e) {
+                    // Undo: Ctrl+Z (Windows/Linux) or Cmd+Z (Mac)
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        undo_edit();
+                        return false;
+                    }
+                    // Redo: Ctrl+Y (Windows/Linux) or Cmd+Shift+Z (Mac)
+                    if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        redo_edit();
+                        return false;
+                    }
                     if (e.key === "Tab" && typeof handle_autocomplete_tab !== 'undefined') {
                         if (handle_autocomplete_tab()) {
                             e.preventDefault();

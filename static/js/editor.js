@@ -61,6 +61,11 @@ function save_document_state(user_accepted_suggestion_ids, user_rejected_suggest
 
     var post_obj = {"doc_id": active_doc_id, "new_text": new_plain_text, "user_accepted_suggestion_ids": user_accepted_suggestion_ids, "user_rejected_suggestion_ids": user_rejected_suggestion_ids, "user_autodel_suggestion_ids": user_autodel_suggestion_ids, "current_suggestions": JSON.stringify(suggestions), "current_comments": JSON.stringify(comments)};
     $.post(`${api_server}save_doc_state`, post_obj, function(data) {
+        // After saving, we added to history and are at the latest state
+        // Increment doc_history length and update button states
+        doc_history.push({"text": new_plain_text});
+        // can_undo = doc_history.length > 1, can_redo = false (we're at the end)
+        update_undo_redo_buttons(doc_history.length > 1, false);
         if(callback_fn) {
             callback_fn();
         }
